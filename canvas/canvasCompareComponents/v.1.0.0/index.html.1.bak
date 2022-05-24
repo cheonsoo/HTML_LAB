@@ -1,0 +1,192 @@
+<html>
+<head>
+  <!-- <link rel="stylesheet" type="text/css" href="timeline.css"> -->
+  <style>
+    .canvas-container {
+      /* padding: 20px;
+      margin: 20px; */
+      width: 100%;
+      height: 500px;
+    }
+    #canvas {
+      background-color : #fff;
+      border: 1px solid gray;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas-container">
+    <canvas id='canvas' width="1000"></canvas>
+    <!-- <canvas id='canvas' width="1000" height="500"></canvas> -->
+  </div>
+
+  <div id="status"></div><br>
+  <div id="color" style="width:30px;height:30px;"></div>
+
+  <script>
+    const data = {
+      // prev: ["ModuleA", "ModuleB", "ModuleC", "ModuleD"],
+      // current: ["ModuleB", "ModuleA", "ModuleC"],
+      prev: [
+        {
+          id: "ModuleA",
+          name: "모듈 A",
+        }, {
+          id: "ModuleB",
+          name: "모듈 B",
+        }, {
+          id: "ModuleC",
+          name: "모듈 C",
+        }, {
+          id: "ModuleD",
+          name: "모듈 D",
+        }, {
+          id: "ModuleE",
+          name: "모듈 E",
+        }
+      ],
+      current: [
+        {
+          id: "ModuleB",
+          name: "모듈 B",
+        },
+        {
+          id: "ModuleA",
+          name: "모듈 A",
+        }, {
+          id: "ModuleC",
+          name: "모듈 C",
+        }, {
+          id: "ModuleE",
+          name: "모듈 E",
+        }
+      ],
+      changed: [
+        {
+          id: "ModuleA",
+          from: 0,
+          to: 1,
+          flag: "moved"
+        }, {
+          id: "ModuleB",
+          from: 1,
+          to: 0,
+          flag: "moved"
+        }, {
+          id: "ModuleD",
+          from: 3,
+          to: -1,
+          flag: "removed"
+        }, {
+          id: "ModuleE",
+          from: 4,
+          to: 3,
+          flag: "moved"
+        }
+      ]
+    };
+
+    (function() {
+      const canvas = document.querySelector("#canvas");
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "#3996FA";
+      // ctx.translate(0.5, 0.5);
+
+      function drawModule(info) {
+        const changedInfo = data.changed.find(item => item.id === info.id);
+        console.log(changedInfo);
+        if (changedInfo && changedInfo.flag === "moved") {
+          ctx.strokeStyle = "green";
+        } else if (changedInfo && changedInfo.flag === "removed") {
+          ctx.strokeStyle = "red";
+        } else {
+          ctx.strokeStyle = "black";
+        }
+
+        ctx.strokeRect(info.x, info.y, container1Width, rectHeight);
+
+        ctx.font = "16px verdana";
+        ctx.fillStyle = "black";
+        ctx.fillText(info.name, info.x + 20, info.y + 20);
+      }
+
+      function drawLine(from, to) {
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y); // From X, From Y
+        ctx.bezierCurveTo(
+          (from.x + to.x) / 2, // Bezier Point 1 X
+          from.y,// Bezier Point 1 Y
+          (from.x + to.x) / 2, // Bezier Point 2 X
+          to.y, // Bezier Point 2 Y
+          to.x, // To X
+          to.y // To Y
+        );
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(to.x + 5, to.y);
+        ctx.lineTo(to.x - 15, to.y - 15);
+        ctx.lineTo(to.x - 15, to.y + 15);
+        ctx.fillStyle = 'RGBA(57, 150, 250, 1.00)';
+        ctx.fill();
+      }
+
+
+      // INIT
+      console.log(data);
+      const container1Width = 200;
+      const container2Width = 200;
+      const container3Width = 200;
+      const canvasPadding = 20;
+      const elementGap = 20;
+      const rectWidth = 200;
+      const rectHeight = 30;
+      const margin = 20;
+
+      canvas.setAttribute("height", (elementGap + rectHeight) * data.prev.length + elementGap);
+
+      for (let i=0; i<data.prev.length; i++) {
+        const moduleInfo = data.prev[i];
+        const x = elementGap;
+        const y = elementGap + ((rectHeight + margin) * i);
+        const info = { ...moduleInfo, x, y };
+        drawModule(info);
+      }
+
+      const left = 500;
+      for (let i=0; i<data.current.length; i++) {
+        const moduleInfo = data.current[i];
+        const x = elementGap + container1Width + container2Width;
+        const y = 0 + margin + ((rectHeight + margin) * i);
+        const info = { ...moduleInfo, x, y };
+        drawModule(info);
+      }
+
+      for (let i=0; i<data.changed.length; i++) {
+        const changed = data.changed[i];
+        const from = {
+          x: elementGap + container1Width + elementGap,
+          y: (elementGap + rectHeight) * (changed.from + 1) - (rectHeight / 2)
+        };
+        const to = {
+          x: elementGap + container1Width + container2Width - elementGap,
+          y: (elementGap + rectHeight) * (changed.to + 1) - (rectHeight / 2)
+        };
+        if (changed.to === -1) {
+          to.x = from.x + 50;
+          to.y = from.y;
+        }
+        drawLine(from, to);
+      }
+
+      // canvas.style.height = (elementGap + rectHeight) * data.prev.length + elementGap + "px";
+      // canvas.setAttribute("height", (elementGap + rectHeight) * data.prev.length + elementGap);
+    })();
+  </script>
+</body>
+</html>

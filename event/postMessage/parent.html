@@ -1,0 +1,34 @@
+<html>
+<style>
+  .canvas-editor {
+    width: 100%;
+    height: 300px;
+  }
+</style>
+
+<body>
+  <div>
+    <iframe class="canvas-editor" id="canvas-editor" src="child.html"></iframe>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      window.addEventListener('message', function(evt) {
+        console.log('### got the message from child ', evt.data);
+        document.querySelector('#result').innerText = evt.data;
+      }, false);
+    });
+
+    function send(evt) {
+      console.log('send to child');
+      const iframe = document.querySelector("#canvas-editor").contentWindow;
+      iframe.postMessage('hi there. message from parent ' + new Date(), '*');
+    }
+  </script>
+  <div>
+    <input type="button" value="sendToChild" onclick="send()" />
+    <div id="result"></div>
+  </div>
+</body>
+
+</html>

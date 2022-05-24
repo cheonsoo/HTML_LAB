@@ -1,0 +1,26 @@
+<html>
+
+<head>
+  <script type="text/javascript">
+    function logEvent(event) {
+      console.log(event.currentTarget.className);
+      event.stopPropagation();
+    }
+  </script>
+</head>
+
+<body>
+  <div>
+    <a id="test" href="http://google.co.kr" onClick="handleClick()">click</a>
+  </div>
+
+  <script type="text/javascript">
+    function handleClick() {
+      event.preventDefault();
+
+      console.log('test');
+    }
+  </script>
+</body>
+
+</html>

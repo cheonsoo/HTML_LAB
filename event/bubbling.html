@@ -1,0 +1,57 @@
+<html>
+
+<head>
+  <script type="text/javascript">
+    function logEvent(event) {
+      console.log(event.currentTarget.className);
+      event.stopPropagation();
+    }
+  </script>
+</head>
+
+<body>
+  <div class="event-bubble">
+    <div class="one">
+      <div class="two">
+        <div class="three">
+          Event Bubbling Test
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="event-capture">
+    <div class="one">
+      <div class="two">
+        <div class="three">
+          Event Capturing Test
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    const bubble = document.querySelector(".event-bubble");
+    const bubleDivs = bubble.querySelectorAll("div");
+    bubleDivs.forEach(div => {
+      div.addEventListener('click', event => {
+        console.log(event.currentTarget.className);
+        event.stopPropagation();
+      });
+    });
+
+    const capture = document.querySelector(".event-capture");
+    const captureDivs = capture.querySelectorAll("div");
+    captureDivs.forEach(div => {
+      div.addEventListener("click", event => {
+        console.log(event.currentTarget.className);
+        event.stopPropagation();
+      }, { capture: false });
+      // capture: false 일 경우 이벤트 버블링 발생, true 일 경우 캡쳐링 발생
+      // 이벤트 전파를 막기 위해선 stopPropagation() 사용할 것
+    });
+
+  </script>
+</body>
+
+</html>

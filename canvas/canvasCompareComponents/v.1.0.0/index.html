@@ -1,0 +1,78 @@
+<html>
+<head>
+  <!-- <link rel="stylesheet" type="text/css" href="timeline.css"> -->
+  <style>
+    .canvas-container {
+      /* padding: 20px;
+      margin: 20px; */
+      width: 100%;
+      height: 500px;
+    }
+    #canvas {
+      /* background-color : #fff;
+      position: absolute; */
+    }
+    #options-container {
+      height: 100px;
+    }
+    #options-container #options #option-item {
+      display: flex;
+      height: 35px;
+    }
+    #options-container #options #option-item div:nth-child(1) {
+      width: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #options-container #options #option-item div:nth-child(2) {
+      width: 200px;
+    }
+    #options-container #options #option-item div:nth-child(2) select {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="options-container">
+    <div id='options' >
+      <div id='option-item'>
+        <div>수정 내역 보기</div>
+        <div>
+          <select onchange="handleChangeShowGroupMove(event)">
+            <option value='all'>모두보기</option>
+            <option value='module' selected>모듈이동만 보기</option>
+            <option value='group'>그룹이동만 보기</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-container">
+    <canvas id='canvas' ></canvas>
+  </div>
+
+  <script type="text/javascript" src="./data/modulesArray.js"></script>
+  <script type="text/javascript" src="./js/moduleCompare.js"></script>
+  <script type="text/javascript">
+    function handleChangeShowGroupMove(evt) {
+      const moduleCompare = window.MODULE_COMPARE;
+      let value = evt.target.value;
+      if (value === 'all') {
+        moduleCompare.options.showModuleMove = true;
+        moduleCompare.options.showGroupMove = true;
+      } else if (value === 'module') {
+        moduleCompare.options.showModuleMove = true;
+        moduleCompare.options.showGroupMove = false;
+      } else {
+        moduleCompare.options.showModuleMove = false;
+        moduleCompare.options.showGroupMove = true;
+      }
+      moduleCompare.redraw();
+    }
+  </script>
+  </script>
+</body>
+</html>

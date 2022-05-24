@@ -1,0 +1,169 @@
+<html>
+<head>
+  <!-- <link rel="stylesheet" type="text/css" href="timeline.css"> -->
+  <style>
+    .canvas-container {
+      /* padding: 20px;
+      margin: 20px; */
+      width: 100%;
+      height: 500px;
+    }
+    #canvas {
+      background-color : #fff;
+      border: 1px solid gray;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas-container">
+    <canvas id='canvas' width="1000"></canvas>
+    <!-- <canvas id='canvas' width="1000" height="500"></canvas> -->
+  </div>
+
+  <div id="status"></div><br>
+  <div id="color" style="width:30px;height:30px;"></div>
+
+  <script>
+    function Canvas() {
+      container = null;
+    }
+
+    function ModuleInfo({ id = "", name = "", order = -1, to = -1, flag = "" }) {
+      this.id = id;
+      this.name = name;
+      this.order = order;
+      this.to = to;
+      this.flag = flag;
+      this.x = -1;
+      this.y = -1;
+
+      ModuleInfo.prototype.setXY = function(x, y) {
+        this.x = x;
+        this.y = y;
+      }
+    }
+    const moduleA = new ModuleInfo({ id: "ModuleA", name: "모듈A", order: 0, to: 1, flag: "moved" });
+    const moduleB = new ModuleInfo({ id: "ModuleB", name: "모듈B", order: 1, to: 0, flag: "moved" });
+    const moduleC = new ModuleInfo({ id: "ModuleC", name: "모듈C", order: 2, to: 2, flag: "" });
+    const moduleD = new ModuleInfo({ id: "ModuleD", name: "모듈D", order: 3, to: -1, flag: "removed" });
+    const moduleE = new ModuleInfo({ id: "ModuleE", name: "모듈E", order: 4, to: 3, flag: "moved" });
+    const moduleF = new ModuleInfo({ id: "ModuleF", name: "모듈F", order: 5, to: 4, flag: "" });
+
+    const data = [];
+    data.push(moduleA);
+    data.push(moduleB);
+    data.push(moduleC);
+    data.push(moduleD);
+    data.push(moduleE);
+    data.push(moduleF);
+
+    (function() {
+      const canvas = document.querySelector("#canvas");
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "#3996FA";
+
+      function drawModule(info) {
+        if (info.flag === "moved") {
+          ctx.strokeStyle = "green";
+        } else if (info.flag === "removed") {
+          ctx.strokeStyle = "red";
+        } else {
+          ctx.strokeStyle = "black";
+        }
+
+        ctx.strokeRect(info.x, info.y, container1Width, rectHeight);
+
+        ctx.font = "16px verdana";
+        ctx.fillStyle = "black";
+        ctx.fillText(info.name, info.x + 20, info.y + 20);
+      }
+
+      function drawLine(from, to) {
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y); // From X, From Y
+        ctx.bezierCurveTo(
+          (from.x + to.x) / 2, // Bezier Point 1 X
+          from.y,// Bezier Point 1 Y
+          (from.x + to.x) / 2, // Bezier Point 2 X
+          to.y, // Bezier Point 2 Y
+          to.x, // To X
+          to.y // To Y
+        );
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(to.x + 5, to.y);
+        ctx.lineTo(to.x - 15, to.y - 15);
+        ctx.lineTo(to.x - 15, to.y + 15);
+        ctx.fillStyle = 'RGBA(57, 150, 250, 1.00)';
+        ctx.fill();
+      }
+
+      function initPrevModules() {
+        data.sort((a, b) => a.order - b.order);
+
+        for (let i=0; i<data.length; i++) {
+          const module = data[i];
+          const x = elementGap;
+          const y = elementGap + ((rectHeight + margin) * i);
+          module.setXY(x, y);
+          drawModule(module);
+        }
+      }
+
+      function initCurrentModules() {
+        const current = data.filter(item => item.to > -1);
+        current.sort((a, b) => a.to - b.to);
+        console.log(current);
+
+        for (let i=0; i<current.length; i++) {
+          const module = current[i];
+          const x = elementGap + container1Width + container2Width;
+          const y = elementGap + ((rectHeight + margin) * i);
+          module.setXY(x, y);
+          drawModule(module);
+        }
+      }
+
+      function drawChangedInfoArrow() {
+        const changed = data.filter(item => item.flag === 'moved' || item.flag === 'removed');
+        for (let i=0; i<changed.length; i++) {
+          const module = changed[i];
+          const from = {
+            x: elementGap + container1Width + elementGap,
+            y: (elementGap + rectHeight) * (module.order + 1) - (rectHeight / 2)
+          };
+          const to = {
+            x: elementGap + container1Width + container2Width - elementGap,
+            y: (elementGap + rectHeight) * (module.to + 1) - (rectHeight / 2)
+          };
+          if (module.flag === 'moved') {
+            drawLine(from, to);
+          }
+        }
+      }
+
+      // INIT
+      const container1Width = 200;
+      const container2Width = 200;
+      const container3Width = 200;
+      const canvasPadding = 20;
+      const elementGap = 20;
+      const rectWidth = 200;
+      const rectHeight = 30;
+      const margin = 20;
+
+      canvas.setAttribute("height", (elementGap + rectHeight) * data.length + elementGap);
+
+      initPrevModules();
+      initCurrentModules();
+      drawChangedInfoArrow();
+    })();
+  </script>
+</body>
+</html>

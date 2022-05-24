@@ -1,0 +1,120 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <canvas id="canvas" width="1000" height="1000" />
+    <script>
+      const canvas = document.querySelector('#canvas');
+      const ctx = canvas.getContext('2d');
+
+      function bezWithArrowheads({ from, to, options }) {
+        function pointsToNormalisedVec(p, pp){
+          let len;
+          norm.y = pp.x - p.x;
+          norm.x = -(pp.y - p.y);
+          len = Math.sqrt(norm.x * norm.x + norm.y * norm.y);
+          norm.x /= len;
+          norm.y /= len;
+          return norm;
+        }
+
+        // B(t) = (1 - t)^3*P0 + (3(1 - t)^2 * t * P1) + (3 * (1 - t) * t^2 * P2) + (t^3 * P3)
+        // 0 <= t <= 1
+        function getBezierCoord(p0, p1, p2, p3, t = 0) {
+          const bx = (Math.pow((1 - t), 3) * p0.x) + (3 * Math.pow((1 - t), 2) * t * p1.x) + (3 * (1 - t) * Math.pow(t, 2) * p2.x) + (Math.pow(t, 3) * p3.x);
+          const by = (Math.pow((1 - t), 3) * p0.y) + (3 * Math.pow((1 - t), 2) * t * p1.y) + (3 * (1 - t) * Math.pow(t, 2) * p2.y) + (Math.pow(t, 3) * p3.y);
+          return { x: bx, y: by }
+        }
+
+        ctx.strokeStyle = options.lineColor || '#00000';
+        ctx.fillStyle = options.lineColor || '#00000';
+
+        // Draw Bezier Line
+        const cp1 = {
+          x: (from.x + to.x) / 2,
+          y: from.y
+        };
+        const cp2 = {
+          x: (from.x + to.x) / 2,
+          y: to.y
+        };
+        console.log(from);
+        console.log(cp1);
+        console.log(cp2);
+        console.log(to);
+
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, to.x, to.y);
+        ctx.stroke();
+
+        // Draw Arrows
+        let x = 0;
+        let y = 0;
+        let norm = {};
+        const arrowWidth = options.arrow.length / 2;
+
+        let bezierCoord;
+        if (options.arrow.start) {
+          bezierCoord = getBezierCoord(from, cp1, cp2, to, 0.97);
+          norm = pointsToNormalisedVec(bezierCoord, to);
+          ctx.beginPath();
+          const p1 = {
+            x: to.x + (arrowWidth * norm.x + options.arrow.length * -norm.y),
+            y: to.y + (arrowWidth * norm.y + options.arrow.length * norm.x)
+          };
+          const p2 = {
+            x: to.x + (arrowWidth * -norm.x + options.arrow.length * -norm.y),
+            y: to.y + (arrowWidth * -norm.y + options.arrow.length * norm.x)
+          };
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(to.x, to.y);
+          ctx.lineTo(p2.x, p2.y);
+
+          if (options.arrow.fill)
+            ctx.fill();
+
+          ctx.stroke();
+        }
+
+        if (options.arrow.end) {
+          ctx.beginPath();
+          bezierCoord = getBezierCoord(from, cp1, cp2, to, 0.03);
+          norm = pointsToNormalisedVec(from, bezierCoord);
+
+          const p1 = {
+            x: from.x + (arrowWidth * norm.x - options.arrow.length * -norm.y),
+            y: from.y + (arrowWidth * norm.y - options.arrow.length * norm.x)
+          };
+          const p2 = {
+            x: from.x + (arrowWidth * -norm.x - options.arrow.length * -norm.y),
+            y: from.y + (arrowWidth * -norm.y - options.arrow.length * norm.x)
+          };
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(from.x, from.y);
+          ctx.lineTo(p2.x, p2.y);
+
+          if (options.arrow.fill)
+            ctx.fill();
+
+          ctx.stroke();
+        }
+
+        ctx.stroke();
+      }
+
+      const from = { x: 50, y: 900 };
+      const to = { x: 300, y: 100 };
+      const options = {
+        lineColor: 'blue',
+        arrow: {
+          length: 10,
+          fill: true,
+          start: true,
+          end: true
+        }
+      };
+      bezWithArrowheads({ from, to, options });
+    </script>
+  </body>
+</html>

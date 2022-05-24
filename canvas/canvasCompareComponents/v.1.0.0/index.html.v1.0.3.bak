@@ -1,0 +1,240 @@
+<html>
+<head>
+  <!-- <link rel="stylesheet" type="text/css" href="timeline.css"> -->
+  <style>
+    .canvas-container {
+      /* padding: 20px;
+      margin: 20px; */
+      width: 100%;
+      height: 500px;
+    }
+    #canvas {
+      background-color : #fff;
+      border: 1px solid gray;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas-container">
+    <canvas id='canvas' width="1000"></canvas>
+    <!-- <canvas id='canvas' width="1000" height="500"></canvas> -->
+  </div>
+
+  <div id="status"></div><br>
+  <div id="color" style="width:30px;height:30px;"></div>
+
+  <script>
+    function Canvas({ id = "", prevModules = [], currentModules = [], options = null }) {
+      this.id = id;
+      this.container = null;
+      this.ctx = null;
+      this.options = {};
+      this.prevModules = prevModules;
+      this.currentModules = currentModules;
+      this.data = [];
+      this.options = options || DEFAULT_OPTIONS;
+
+      this.initialize();
+    }
+
+    Canvas.prototype.initialize = function() {
+      this.container = document.querySelector(`${this.id}`);
+      this.ctx = this.container.getContext('2d');
+
+      this.ctx.imageSmoothingEnabled = true;
+      this.ctx.lineWidth = 5;
+      this.ctx.strokeStyle = "#3996FA";
+
+      const opt = this.options;
+      const largestLength = this.prevModules.length >= this.currentModules.length ? this.prevModules.length : this.currentModules.length;
+      const width = opt.margin + opt.container1Width + opt.container2Width + opt.container3Width + opt.margin;
+      const height = (opt.elementGap + opt.rectHeight) * largestLength + opt.elementGap;
+      this.container.setAttribute("width", width);
+      this.container.setAttribute("height", height);
+
+      this.initData();
+
+      console.log(this);
+    };
+
+    Canvas.prototype.draw = function() {
+      this.drawPrevModules();
+      this.drawCurrentModules();
+      this.drawChangedInfoArrow();
+    };
+
+    Canvas.prototype.initData = function() {
+      this.data = [];
+
+      // Prev
+      for (let i=0; i<this.prevModules.length; i++) {
+        const item = this.prevModules[i];
+        const module = new ModuleInfo({ id: item.id, name: item.name, order: item.order });
+        this.data.push(module);
+      }
+
+      // Current
+      for (let i=0; i<this.currentModules.length; i++) {
+        const item = this.currentModules[i];
+        const module = this.data.find(m => m.id === item.id);
+
+        if (module) {
+          module.to = item.order;
+          if (module.order === module.to)
+            module.flag = 'stayed';
+          else
+            module.flag = 'moved';
+        } else {
+          const newModule = new ModuleInfo({ id: item.id, name: item.name, to: item.order, flag: 'new' });
+          this.data.push(newModule);
+        }
+      }
+
+      const notFlagged = this.data.filter(m => m.flag === "");
+      notFlagged.forEach(m => m.flag = 'removed');
+    };
+
+    Canvas.prototype.drawModule = function(info) {
+      if (info.flag === 'moved') {
+        this.ctx.strokeStyle = 'green';
+      } else if (info.flag === 'removed') {
+        this.ctx.strokeStyle = 'red';
+      } else if (info.flag === 'new') {
+        this.ctx.strokeStyle = 'RGBA(57, 150, 250, 1.00)';
+      } else {
+        this.ctx.strokeStyle = 'black';
+      }
+
+      const opt = this.options;
+      this.ctx.strokeRect(info.x, info.y, opt.container1Width, opt.rectHeight);
+
+      this.ctx.font = '16px verdana';
+      this.ctx.fillStyle = 'black';
+      this.ctx.fillText(info.name, info.x + 20, info.y + 20);
+    };
+
+    Canvas.prototype.drawLine = function(from, to) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(from.x, from.y); // From X, From Y
+      this.ctx.bezierCurveTo(
+        (from.x + to.x) / 2, // Bezier Point 1 X
+        from.y,// Bezier Point 1 Y
+        (from.x + to.x) / 2, // Bezier Point 2 X
+        to.y, // Bezier Point 2 Y
+        to.x, // To X
+        to.y // To Y
+      );
+      this.ctx.strokeStyle = 'RGBA(57, 150, 250, 1.00)';
+      this.ctx.stroke();
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(to.x + 5, to.y);
+      this.ctx.lineTo(to.x - 7, to.y - 7);
+      this.ctx.lineTo(to.x - 7, to.y + 7);
+      this.ctx.fillStyle = 'RGBA(57, 150, 250, 1.00)';
+      this.ctx.fill();
+    };
+
+    Canvas.prototype.drawPrevModules = function() {
+      const opt = this.options;
+      const prev = this.data.filter(m => m.order > -1);
+      prev.sort((a, b) => a.order - b.order);
+
+      for (let i=0; i<prev.length; i++) {
+        const module = prev[i];
+        const x = opt.elementGap;
+        const y = opt.elementGap + ((opt.rectHeight + opt.margin) * i);
+        module.setXY(x, y);
+        this.drawModule(module);
+      }
+    };
+
+    Canvas.prototype.drawCurrentModules = function() {
+      const opt = this.options;
+      const current = this.data.filter(item => item.to > -1);
+      current.sort((a, b) => a.to - b.to);
+
+      for (let i=0; i<current.length; i++) {
+        const module = current[i];
+        const x = opt.elementGap + opt.container1Width + opt.container2Width;
+        const y = opt.elementGap + ((opt.rectHeight + opt.margin) * i);
+        module.setXY(x, y);
+        this.drawModule(module);
+      }
+    };
+
+    Canvas.prototype.drawChangedInfoArrow = function() {
+      const opt = this.options;
+      const changed = this.data.filter(item => item.flag === 'moved' || item.flag === 'removed');
+      for (let i=0; i<changed.length; i++) {
+        const module = changed[i];
+        const from = {
+          x: opt.elementGap + opt.container1Width + opt.elementGap,
+          y: (opt.elementGap + opt.rectHeight) * (module.order + 1) - (opt.rectHeight / 2)
+        };
+        const to = {
+          x: opt.elementGap + opt.container1Width + opt.container2Width - opt.elementGap,
+          y: (opt.elementGap + opt.rectHeight) * (module.to + 1) - (opt.rectHeight / 2)
+        };
+        if (module.flag === 'moved') {
+          this.drawLine(from, to);
+        }
+      }
+    };
+
+    function ModuleInfo({ id = "", name = "", order = -1, to = -1, flag = "" }) {
+      this.id = id;
+      this.name = name;
+      this.order = order;
+      this.to = to;
+      this.flag = flag;
+      this.x = -1;
+      this.y = -1;
+    }
+
+    ModuleInfo.prototype.setXY = function(x, y) {
+      this.x = x;
+      this.y = y;
+    };
+
+    const prev = [
+      { id: "ModuleA", name: "모듈A", order: 0 },
+      { id: "ModuleB", name: "모듈B", order: 1 },
+      { id: "ModuleC", name: "모듈C", order: 2 },
+      { id: "ModuleD", name: "모듈D", order: 3 },
+      { id: "ModuleE", name: "모듈E", order: 4 },
+      { id: "ModuleF", name: "모듈F", order: 5 },
+      { id: "ModuleI", name: "모듈I", order: 6 },
+      { id: "ModuleJ", name: "모듈J", order: 7 }
+    ];
+    const current = [
+      { id: "ModuleA", name: "모듈A", order: 1 },
+      { id: "ModuleB", name: "모듈B", order: 0 },
+      { id: "ModuleC", name: "모듈C", order: 2 },
+      { id: "ModuleE", name: "모듈E", order: 3 },
+      { id: "ModuleF", name: "모듈F", order: 4 },
+      { id: "ModuleG", name: "모듈G", order: 5 },
+      { id: "ModuleH", name: "모듈H", order: 6 }
+    ];
+
+    const DEFAULT_OPTIONS = {
+      container1Width: 200,
+      container2Width: 200,
+      container3Width: 200,
+      canvasPadding: 20,
+      elementGap: 20,
+      rectWidth: 200,
+      rectHeight: 30,
+      margin: 20,
+    };
+
+    (function() {
+      const canvas = new Canvas({ id: "#canvas", prevModules: prev, currentModules: current, options: DEFAULT_OPTIONS });
+      canvas.draw();
+    })();
+  </script>
+</body>
+</html>

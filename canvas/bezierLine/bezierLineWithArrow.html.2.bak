@@ -1,0 +1,95 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <canvas id="canvas" width="1000" height="1000" />
+    <script>
+      const canvas = document.querySelector('#canvas');
+      const ctx = canvas.getContext('2d');
+
+      function bezWithArrowheads({ from, to, options }) {
+        function pointsToNormalisedVec(p, pp){
+          let len;
+          norm.y = pp.x - p.x;
+          norm.x = -(pp.y - p.y);
+          len = Math.sqrt(norm.x * norm.x + norm.y * norm.y);
+          norm.x /= len;
+          norm.y /= len;
+          return norm;
+        }
+
+        ctx.strokeStyle = options.lineColor || '#00000';
+        ctx.fillStyle = options.lineColor || '#00000';
+
+        // Draw Bezier Line
+        const cp1 = {
+          x: (from.x + to.x) / 2,
+          y: from.y
+        };
+        const cp2 = {
+          x: (from.x + to.x) / 2,
+          y: to.y
+        };
+
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, to.x, to.y);
+        ctx.stroke();
+
+        // Draw Arrows
+        let x = 0;
+        let y = 0;
+        let norm = {};
+        const arrowWidth = options.arrow.length / 2;
+        norm = pointsToNormalisedVec(cp2, to);
+        if (options.arrow.start) {
+          ctx.beginPath();
+          x = arrowWidth * norm.x + options.arrow.length * -norm.y;
+          y = arrowWidth * norm.y + options.arrow.length * norm.x;
+          ctx.moveTo(to.x + x, to.y + y);
+          ctx.lineTo(to.x, to.y);
+          x = arrowWidth * -norm.x + options.arrow.length * -norm.y;
+          y = arrowWidth * -norm.y + options.arrow.length * norm.x;
+          ctx.lineTo(to.x + x, to.y + y);
+
+          if (options.arrow.fill)
+            ctx.fill();
+
+          ctx.stroke();
+        }
+
+        if (options.arrow.end) {
+          ctx.beginPath();
+          norm = pointsToNormalisedVec(from, cp1);
+          x = arrowWidth * norm.x - options.arrow.length * -norm.y;
+          y = arrowWidth * norm.y - options.arrow.length * norm.x;
+          ctx.moveTo(from.x + x, from.y + y);
+          ctx.lineTo(from.x, from.y);
+          x = arrowWidth * -norm.x - options.arrow.length * -norm.y;
+          y = arrowWidth * -norm.y - options.arrow.length * norm.x;
+          ctx.lineTo(from.x + x, from.y + y);
+
+          if (options.arrow.fill)
+            ctx.fill();
+
+          ctx.stroke();
+        }
+
+        ctx.stroke();
+      }
+
+      const from = { x: 50, y: 900 };
+      const to = { x: 300, y: 100 };
+      const options = {
+        lineColor: 'blue',
+        arrow: {
+          length: 10,
+          fill: false,
+          start: true,
+          end: true
+        }
+      };
+      bezWithArrowheads({ from, to, options });
+    </script>
+  </body>
+</html>

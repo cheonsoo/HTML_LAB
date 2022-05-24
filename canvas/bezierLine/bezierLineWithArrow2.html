@@ -1,0 +1,71 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <canvas id="canvas" width="1000" height="1000" />
+    <script>
+      const canvas = document.querySelector('#canvas');
+      const ctx = canvas.getContext('2d');
+
+      // Usage:
+      const p0 = { x: 50, y: 900 };
+      const p1 = { x: 175, y: 900 };
+      const p2 = { x: 175, y: 100 };
+      const p3 = { x: 300, y: 100 };
+
+      // draws both cubic and quadratic bezier
+      function bezWithArrowheads(p0, p1, p2, p3, arrowLength, hasStartArrow, hasEndArrow) {
+          var x, y, norm, ex, ey;
+
+          function pointsToNormalisedVec(p,pp){
+              var len;
+              norm.y = pp.x - p.x;
+              norm.x = -(pp.y - p.y);
+              len = Math.sqrt(norm.x * norm.x + norm.y * norm.y);
+              norm.x /= len;
+              norm.y /= len;
+              return norm;
+          }
+
+          var arrowWidth = arrowLength / 2;
+          norm = {};
+
+          // defaults to true for both arrows if arguments not included
+          hasStartArrow = hasStartArrow === undefined || hasStartArrow === null ? true : hasStartArrow;
+          hasEndArrow = hasEndArrow === undefined || hasEndArrow === null ? true : hasEndArrow;
+          
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
+          ex = p3.x; // get end point
+          ey = p3.y;
+          norm = pointsToNormalisedVec(p2,p3);
+
+          if (hasEndArrow) {
+              x = arrowWidth * norm.x + arrowLength * -norm.y;
+              y = arrowWidth * norm.y + arrowLength * norm.x;
+              ctx.moveTo(ex + x, ey + y);
+              ctx.lineTo(ex, ey);
+              x = arrowWidth * -norm.x + arrowLength * -norm.y;
+              y = arrowWidth * -norm.y + arrowLength * norm.x;
+              ctx.lineTo(ex + x, ey + y);
+          }
+
+          if (hasStartArrow) {
+              norm = pointsToNormalisedVec(p0,p1);
+              x = arrowWidth * norm.x - arrowLength * -norm.y;
+              y = arrowWidth * norm.y - arrowLength * norm.x;
+              ctx.moveTo(p0.x + x, p0.y + y);
+              ctx.lineTo(p0.x, p0.y);
+              x = arrowWidth * -norm.x - arrowLength * -norm.y;
+              y = arrowWidth * -norm.y - arrowLength * norm.x;
+              ctx.lineTo(p0.x + x, p0.y + y);
+          }
+
+          ctx.stroke();
+      }
+
+      bezWithArrowheads(p0, p1, p2, p3, 15, true, true);
+    </script>
+  </body>
+</html>
