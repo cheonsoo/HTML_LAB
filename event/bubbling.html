@@ -36,7 +36,9 @@
     bubleDivs.forEach(div => {
       div.addEventListener('click', event => {
         console.log(event.currentTarget.className);
-        event.stopPropagation();
+        console.log('current target', event.currentTarget.className);
+        console.log('target', event.target.className);
+        // event.stopPropagation();
       });
     });
 
